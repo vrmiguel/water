@@ -38,6 +38,8 @@ pub struct Local {
 /// Represents a function definition.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Function {
+    /// The identifier for this function, if any.
+    pub identifier: Option<SmallString>,
     /// The parameters of this function.
     /// Ordered according to the order the
     /// parameters were defined.

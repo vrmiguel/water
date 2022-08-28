@@ -78,10 +78,10 @@ pub fn parse_module(input: &str) -> IResult<Module> {
 ///     },
 /// ];
 ///
-/// let function = Function { parameters, local_variables };
+/// let function = Function { identifier: Some("add".into()), parameters, local_variables };
 ///
 /// assert_eq!(
-///     parse_function("(func (param $number f64) (param i64) (local $l1 i32) (local f32))"),
+///     parse_function("(func $add (param $number f64) (param i64) (local $l1 i32) (local f32))"),
 ///     Ok(("", function))
 /// );
 /// ```
@@ -90,8 +90,11 @@ pub fn parse_function(input: &str) -> IResult<Function> {
         let mut parameters = Vec::new();
         let mut local_variables = Vec::new();
 
-        let (mut rest, _) =
+        let (rest, _) =
             preceded(multispace0, tag("func"))(input)?;
+
+        let (mut rest, identifier) =
+            preceded(multispace0, opt(parse_identifier))(rest)?;
 
         while let Ok((new_rest, parameter)) =
             parse_parameter(rest)
@@ -106,6 +109,7 @@ pub fn parse_function(input: &str) -> IResult<Function> {
         }
 
         let function = Function {
+            identifier,
             parameters,
             local_variables,
         };
