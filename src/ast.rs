@@ -49,3 +49,58 @@ pub struct Function {
     /// locals were defined.
     pub local_variables: Vec<Local>,
 }
+
+/// A single instruction that can be located inside a function
+/// body
+pub enum Instruction {
+    // TODO: allow indexes in `call`
+    Call(SmallString),
+    /// Fetch or set a local or global variable
+    VariableInstruction {
+        /// Wether this instruction is in `local.` or `global.`
+        scope: ScopeKind,
+
+        instruction: VariableInstruction,
+        index: Index,
+    },
+    /// An operation regarding an integer
+    Integer(),
+}
+
+/// An index for an instruction, may be an identifier or a
+/// numerical index.
+///
+/// # Examples
+///
+/// * `call $function` (function is an identifier in an
+/// indexing position)
+/// * ` local.get 0` (0 is a numerical index)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Index {
+    Identifier(SmallString),
+    Numerical(i64),
+}
+
+/// Wether a given instruction is in `local.` or `global.`
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ScopeKind {
+    Global,
+    Local,
+}
+
+/// Represents an instruction for direct variable access.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum VariableInstruction {
+    /// Get the value of an identifier by its index or
+    /// identifier.
+    ///
+    /// E.g. `get $number`
+    Get,
+    /// Set the value of a variable.
+    ///
+    /// E.g. `(local.set $var (i32.const 10)) ;; set $var to 10`
+    Set,
+    /// Like `local.set` but also returns its argument.
+    /// Does not exist for `global`.
+    Tee,
+}

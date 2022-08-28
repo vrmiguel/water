@@ -13,7 +13,7 @@ use nom::{
 };
 
 use crate::{
-    ast::{Function, Local, Module, Parameter, WasmType},
+    ast::{Function, Index, Local, Module, Parameter, WasmType},
     small_string::SmallString,
 };
 
@@ -237,6 +237,25 @@ pub fn parse_type(input: &str) -> IResult<WasmType> {
             value(WasmType::Float64, tag("f64")),
         )),
     )(input)
+}
+
+/// Parses an index, either numerical or as an identifier.
+///
+/// ```
+/// use water::parser::parse_index;
+/// use water::small_string::SmallString;
+/// use water::ast::Index;
+///
+/// assert_eq!(parse_index("$var"), Ok(("", Index::Identifier("var".into()))));
+/// assert_eq!(parse_index("5"), Ok(("", Index::Numerical(5))));
+/// ```
+pub fn parse_index(input: &str) -> IResult<Index> {
+    alt((
+        parse_identifier
+            .map(SmallString::new)
+            .map(Index::Identifier),
+        nom::character::complete::i64.map(Index::Numerical),
+    ))(input)
 }
 
 // Based on https://github.com/Geal/nom/blob/761ab0a24fccb4c560367b583b608fbae5f31647/examples/s_expression.rs#L155
