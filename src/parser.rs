@@ -13,7 +13,10 @@ use nom::{
 };
 
 use crate::{
-    ast::{Function, Index, Local, Module, Parameter, WasmType},
+    ast::{
+        Function, Index, Local, Module, NumericalType,
+        Parameter, Type,
+    },
     small_string::SmallString,
 };
 
@@ -54,27 +57,27 @@ pub fn parse_module(input: &str) -> IResult<Module> {
 ///
 /// ```
 /// use water::parser::parse_function;
-/// use water::ast::{Function, Parameter, Local, WasmType};
+/// use water::ast::{Function, Parameter, Local, Type, NumericalType};
 ///
 /// let parameters = vec![
 ///     Parameter {
 ///         identifier: Some("number".into()),
-///         type_: WasmType::Float64
+///         type_: Type::Numerical(NumericalType::Float64)
 ///     },
 ///     Parameter {
 ///         identifier: None,
-///         type_: WasmType::Int64
+///         type_: Type::Numerical(NumericalType::Int64)
 ///     },
 /// ];
 ///
 /// let local_variables = vec![
 ///     Local {
 ///         identifier: Some("l1".into()),
-///         type_: WasmType::Int32
+///         type_: Type::Numerical(NumericalType::Int32)
 ///     },
 ///     Local {
 ///         identifier: None,
-///         type_: WasmType::Float32
+///         type_: Type::Numerical(NumericalType::Float32)
 ///     },
 /// ];
 ///
@@ -123,17 +126,17 @@ pub fn parse_function(input: &str) -> IResult<Function> {
 /// Parses a function parameter.
 ///
 /// ```
-/// use water::ast::{Parameter, WasmType};
+/// use water::ast::{Parameter, Type, NumericalType};
 /// use water::parser::parse_parameter;
 ///
 /// let anonymous_i32 = Parameter {
 ///     identifier: None,
-///     type_: WasmType::Int32
+///     type_: Type::Numerical(NumericalType::Int32)
 /// };
 ///
 /// let named_f64 = Parameter {
 ///     identifier: Some("number".into()),
-///     type_: WasmType::Float64
+///     type_: Type::Numerical(NumericalType::Float64)
 /// };
 ///
 /// assert_eq!(parse_parameter("(param i32)"), Ok(("", anonymous_i32)));
@@ -162,18 +165,18 @@ pub fn parse_parameter(input: &str) -> IResult<Parameter> {
 /// Parses a local variable definition.
 ///
 /// ```
-/// use water::ast::{Local, WasmType};
+/// use water::ast::{Local, Type, NumericalType};
 /// use water::parser::parse_local;
 /// use water::small_string::SmallString;
 ///
 /// let anonymous_f32 = Local {
 ///     identifier: None,
-///     type_: WasmType::Float32
+///     type_: Type::Numerical(NumericalType::Float32)
 /// };
 ///
 /// let named_i64 = Local {
 ///     identifier: Some("number".into()),
-///     type_: WasmType::Int64
+///     type_: Type::Numerical(NumericalType::Int64)
 /// };
 ///
 /// assert_eq!(parse_local("(local f32)"), Ok(("", anonymous_f32)));
@@ -227,16 +230,25 @@ pub fn parse_identifier(input: &str) -> IResult<SmallString> {
 /// Parses a WASM type.
 ///
 /// Does not eat leading whitespace.
-pub fn parse_type(input: &str) -> IResult<WasmType> {
+pub fn parse_type(input: &str) -> IResult<Type> {
     context(
         "type",
-        alt((
-            value(WasmType::Int32, tag("i32")),
-            value(WasmType::Int64, tag("i64")),
-            value(WasmType::Float32, tag("f32")),
-            value(WasmType::Float64, tag("f64")),
-        )),
+        alt((parse_numerical_type.map(Type::Numerical),)),
     )(input)
+}
+
+/// Parses one of the four built-in numerical WASM types.
+///
+/// Does not eat leading whitespace.
+pub fn parse_numerical_type(
+    input: &str,
+) -> IResult<NumericalType> {
+    alt((
+        value(NumericalType::Int32, tag("i32")),
+        value(NumericalType::Int64, tag("i64")),
+        value(NumericalType::Float32, tag("f32")),
+        value(NumericalType::Float64, tag("f64")),
+    ))(input)
 }
 
 /// Parses an index, either numerical or as an identifier.

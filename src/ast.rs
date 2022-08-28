@@ -6,11 +6,36 @@ use crate::small_string::SmallString;
 pub struct Module {}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum WasmType {
+pub enum Type {
+    Numerical(NumericalType),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+/// The four built-in WebAssembly numerical types.
+pub enum NumericalType {
+    /// Signed integer of 32 bits
     Int32,
+    /// Signed integer of 64 bits
     Int64,
+    /// Floating-number of 32 bits
     Float32,
+    /// Floating-number of 64 bits
     Float64,
+}
+
+/// The same as [`NumericalType`] but actually carries a value
+/// that it represents
+#[derive(Clone, Copy, Debug, PartialEq)]
+
+pub enum NumericalValue {
+    /// Signed integer of 32 bits
+    Int32(i32),
+    /// Signed integer of 64 bits
+    Int64(i64),
+    /// Floating-number of 32 bits
+    Float32(f32),
+    /// Floating-number of 64 bits
+    Float64(f64),
 }
 
 /// A function parameter.
@@ -21,7 +46,7 @@ pub struct Parameter {
     /// index.
     pub identifier: Option<SmallString>,
     /// The type of this parameter
-    pub type_: WasmType,
+    pub type_: Type,
 }
 
 /// A local variable within a function.
@@ -32,7 +57,7 @@ pub struct Local {
     /// index.
     pub identifier: Option<SmallString>,
     /// The type of this parameter
-    pub type_: WasmType,
+    pub type_: Type,
 }
 
 /// Represents a function definition.
@@ -52,19 +77,36 @@ pub struct Function {
 
 /// A single instruction that can be located inside a function
 /// body
+#[derive(Clone, Debug, PartialEq)]
 pub enum Instruction {
-    // TODO: allow indexes in `call`
-    Call(SmallString),
+    Call(Index),
     /// Fetch or set a local or global variable
     VariableInstruction {
         /// Wether this instruction is in `local.` or `global.`
         scope: ScopeKind,
-
+        /// Defines if we're getting/setting/teeing the variable
         instruction: VariableInstruction,
+        /// Accesses the variable either through its definition
+        /// index or by its identifier
         index: Index,
     },
-    /// An operation regarding an integer
-    Integer(),
+    /// Pushes a numerical constant to the stack.
+    ///
+    /// E.g. `i32.const 5`, `f64.const 2.5`
+    Constant {
+        /// Represents both the type of the constant
+        /// and the constant itself
+        value: NumericalValue,
+    },
+    /// An arithmetic operation
+    Arithmetic {
+        type_: NumericalType,
+        instr: ArithmeticInstruction,
+    },
+    Comparison {
+        type_: NumericalType,
+        instr: ComparisonInstruction,
+    },
 }
 
 /// An index for an instruction, may be an identifier or a
@@ -103,4 +145,35 @@ pub enum VariableInstruction {
     /// Like `local.set` but also returns its argument.
     /// Does not exist for `global`.
     Tee,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArithmeticInstruction {
+    /// i32.add, i64.add, f32.add, or f64.add
+    Addition,
+    /// i32.sub, i64.sub, f32.sub, or f64.sub
+    Subtraction,
+    /// i32.mul, i64.mul, f32.mul, or f64.mul
+    Multiplication,
+    /// f32.div, or f64.div
+    FloatDivision,
+    /// i32.div_s, i64.div_s
+    SignedDivision,
+    /// i32.div_u, i64.div_u
+    UnsignedDisivion,
+    /// i32.rem_s or i64.rem_s
+    SignedRemainder,
+    /// i32.rem_u or i64.rem_u
+    UnsignedRemainder,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+
+pub enum ComparisonInstruction {
+    Equal,
+    NotEqual,
+    GreaterThan,
+    LessThan,
+    GreaterOrEqual,
+    LessOrEqual,
 }
