@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "waster"
+name = "water"
 version = "0.1.0"
 dependencies = [
  "nom",
