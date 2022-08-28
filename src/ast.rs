@@ -36,7 +36,7 @@ pub enum NumericalValue {
     Float32(f32),
     /// Floating-number of 64 bits
     Float64(f64),
-}
+}   
 
 /// A function parameter.
 #[derive(Clone, Debug, PartialEq, Eq)]

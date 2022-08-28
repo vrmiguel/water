@@ -2,6 +2,9 @@
 //!
 //! Functions are mostly all public as to allow doc-tests.
 
+mod instruction;
+
+pub use instruction::*;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
@@ -252,6 +255,8 @@ pub fn parse_numerical_type(
 }
 
 /// Parses an index, either numerical or as an identifier.
+///
+/// Does not eat leading whitespace.
 ///
 /// ```
 /// use water::parser::parse_index;
