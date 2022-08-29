@@ -86,9 +86,6 @@ pub enum Instruction {
         scope: ScopeKind,
         /// Defines if we're getting/setting/teeing the variable
         instruction: VariableInstruction,
-        /// Accesses the variable either through its definition
-        /// index or by its identifier
-        index: Index,
     },
     /// Pushes a numerical constant to the stack.
     ///
@@ -131,20 +128,28 @@ pub enum ScopeKind {
 }
 
 /// Represents an instruction for direct variable access.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum VariableInstruction {
     /// Get the value of an identifier by its index or
     /// identifier.
     ///
     /// E.g. `get $number`
-    Get,
+    Get(Index),
     /// Set the value of a variable.
     ///
     /// E.g. `(local.set $var (i32.const 10)) ;; set $var to 10`
-    Set,
+    Set {
+        // TODO: check what kind of inline values might be used
+        //       in `set`.
+        // TOOD: handle extra parenthesis in `{scope}.set`
+        //       if there is an "inlined" value
+        index: Index,
+        /// Currently always None
+        value: Option<NumericalValue>,
+    },
     /// Like `local.set` but also returns its argument.
     /// Does not exist for `global`.
-    Tee,
+    Tee(Index),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

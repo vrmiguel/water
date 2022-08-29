@@ -107,47 +107,91 @@ pub fn parse_call(input: &str) -> IResult<Index> {
 /// Does not eat leading whitespace.
 ///
 /// ```
-/// use water::ast::{ScopeKind, VariableInstruction, Instruction};
+/// use water::ast::{ScopeKind, VariableInstruction, Instruction, Index};
 /// use water::parser::parse_variable_instruction;
 ///
 /// assert_eq!(
-///     parse_variable_instruction("local.set $idx 0"),
+/// parse_variable_instruction("local.get $idx"),
+/// Ok((
+///     "",
 ///     Instruction::VariableInstruction {
-///         scope,
-///         instruction: opcode,
-///         index,
+///         scope: ScopeKind::Local,
+///         instruction: VariableInstruction::Get(
+///             Index::Identifier("idx".into())
+///         ),
 ///     }
-/// );
+/// )));
 /// ```
 pub fn parse_variable_instruction(
     input: &str,
 ) -> IResult<Instruction> {
-    let (rest, scope) = alt((
-        value(ScopeKind::Global, tag("global")),
-        value(ScopeKind::Local, tag("local")),
-    ))(input)?;
-
-    let parse_set = value(VariableInstruction::Set, tag(".set"));
-    let parse_get = value(VariableInstruction::Get, tag(".get"));
-    let parse_tee = value(VariableInstruction::Tee, tag(".tee"));
-
-    let (rest, opcode) = match scope {
-        ScopeKind::Global => {
-            // Ensure we don't parse `global.tee`
-            alt((parse_set, parse_get))(rest)?
+    fn parse_get_and_tee(
+        input: &str,
+    ) -> IResult<(VariableInstruction, ScopeKind)> {
+        #[derive(Clone, PartialEq)]
+        pub enum Aux {
+            GlobalGet,
+            LocalGet,
+            LocalTee,
         }
-        ScopeKind::Local => {
-            alt((parse_set, parse_get, parse_tee))(rest)?
-        }
-    };
+        let parse_global_get =
+            value(Aux::GlobalGet, tag("global.get"));
+        let parse_local_get =
+            value(Aux::LocalGet, tag("local.get"));
+        let parse_local_tee =
+            value(Aux::LocalTee, tag("local.tee"));
 
-    let (rest, index) =
-        preceded(multispace0, parse_index)(rest)?;
+        let (rest, opcode) = alt((
+            parse_global_get,
+            parse_local_get,
+            parse_local_tee,
+        ))(input)?;
+
+        let (rest, idx) =
+            preceded(multispace0, parse_index)(rest)?;
+
+        let (opcode, scope) = match opcode {
+            Aux::GlobalGet => (
+                VariableInstruction::Get(idx),
+                ScopeKind::Global,
+            ),
+            Aux::LocalGet => {
+                (VariableInstruction::Get(idx), ScopeKind::Local)
+            }
+            Aux::LocalTee => {
+                (VariableInstruction::Tee(idx), ScopeKind::Local)
+            }
+        };
+
+        Ok((rest, (opcode, scope)))
+    }
+
+    fn parse_set(
+        input: &str,
+    ) -> IResult<(VariableInstruction, ScopeKind)> {
+        let (rest, scope) = alt((
+            value(ScopeKind::Global, tag("global.set")),
+            value(ScopeKind::Local, tag("local.set")),
+        ))(input)?;
+
+        let (rest, index) =
+            preceded(multispace0, parse_index)(rest)?;
+
+        Ok((
+            rest,
+            (
+                VariableInstruction::Set { index, value: None },
+                scope,
+            ),
+        ))
+    }
+
+    let (rest, (opcode, scope)) =
+        alt((parse_set, parse_get_and_tee))(input)?;
 
     let instr = Instruction::VariableInstruction {
         scope,
         instruction: opcode,
-        index,
     };
 
     Ok((rest, instr))
