@@ -8,23 +8,56 @@ use nom::{
     error::context,
     number::complete::double as parse_f64,
     sequence::preceded,
-    Parser,
+    Parser, multi::many0,
 };
 
 // use nom::character::complete::double as parse_i64;
 use super::{parse_index, parse_numerical_type, IResult};
-use crate::ast::{
-    Index, Instruction, NumericalType, NumericalValue,
-    ScopeKind, VariableInstruction,
-};
+use crate::{ast::{
+    Index, Opcode, NumericalType, NumericalValue,
+    ScopeKind, VariableInstruction, Instruction,
+}, parser::parse_parenthesis_enclosed};
 
 pub fn parse_instruction(input: &str) -> IResult<Instruction> {
+    fn parse_plain_instruction(input: &str) -> IResult<Instruction> {
+        let (rest, opcode) = parse_opcode(input)?;
+
+        let instr = Instruction {
+            opcode,
+            arguments: Vec::new()
+        };
+
+        Ok((rest, instr))
+    }
+
+    fn parse_instruction_with_arguments(input: &str) -> IResult<Instruction> {
+        let (rest, opcode) = parse_opcode(input)?;
+
+        // TODO: parse_const is incorrect here, change to parse_instruction or something of the sort
+        let (rest, arguments) = many0(preceded(multispace0, parse_parenthesis_enclosed(parse_const)))(rest)?;
+
+        let instr = Instruction {
+            opcode,
+            arguments
+        };
+
+        Ok((rest, instr))
+    }
+
     alt((
-        parse_variable_instruction,
-        parse_const.map(|value| Instruction::Constant { value }),
-        context("call", parse_call).map(Instruction::Call),
+        parse_plain_instruction,
+        parse_parenthesis_enclosed(parse_instruction_with_arguments)
     ))(input)
 }
+
+pub fn parse_opcode(input: &str) -> IResult<Opcode> {
+    alt((
+        parse_variable_instruction,
+        parse_const.map(|value| Opcode::Constant { value }),
+        context("call", parse_call).map(Opcode::Call),
+    ))(input)
+}
+
 
 /// Parses a `const` operation, such as `i32.const 20` or
 /// `f32.const 2.2`
@@ -90,8 +123,10 @@ pub fn parse_const(input: &str) -> IResult<NumericalValue> {
 /// use water::parser::parse_instruction;
 ///
 /// assert_eq!(parse_call("call 5"), Ok(("", Index::Numerical(5))));
-/// assert_eq!(parse_instruction("call 5"), Ok(("", Instruction::Call(Index::Numerical(5)))));
-/// assert_eq!(parse_instruction("call $func"), Ok(("", Instruction::Call(Index::Identifier("func".into())))));
+/// assert!(parse_instruction("call 5").is_ok());
+/// assert!(parse_instruction("(call 5 (i32.const 5))").is_ok());
+/// assert!(parse_instruction("(call 5").is_err());
+/// assert_eq!(parse_call("call $func"), Ok(("", Index::Identifier("func".into()))));
 /// ```
 pub fn parse_call(input: &str) -> IResult<Index> {
     let (rest, _) = tag("call")(input)?;
@@ -121,7 +156,7 @@ pub fn parse_call(input: &str) -> IResult<Index> {
 /// ```
 pub fn parse_variable_instruction(
     input: &str,
-) -> IResult<Instruction> {
+) -> IResult<Opcode> {
     let (rest, scope) = alt((
         value(ScopeKind::Global, tag("global")),
         value(ScopeKind::Local, tag("local")),
@@ -144,7 +179,7 @@ pub fn parse_variable_instruction(
     let (rest, index) =
         preceded(multispace0, parse_index)(rest)?;
 
-    let instr = Instruction::VariableInstruction {
+    let instr = Opcode::VariableInstruction {
         scope,
         instruction: opcode,
         index,

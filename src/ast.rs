@@ -75,10 +75,20 @@ pub struct Function {
     pub local_variables: Vec<Local>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Instruction {
+    /// The actual operation this instruction represents
+    pub opcode: Opcode,
+    /// The list of "inlined" arguments to this instruction, if any.
+    // TODO: transform this into a "generic" Value
+    // TODO: use SmallVec here
+    pub arguments: Vec<NumericalValue>
+}
+
 /// A single instruction that can be located inside a function
 /// body
 #[derive(Clone, Debug, PartialEq)]
-pub enum Instruction {
+pub enum Opcode {
     Call(Index),
     /// Fetch or set a local or global variable
     VariableInstruction {
