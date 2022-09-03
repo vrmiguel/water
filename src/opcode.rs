@@ -16,29 +16,26 @@ impl ToOpcode for Instruction {
                 instruction,
                 ..
             } => match (scope, instruction) {
-                (
-                    ScopeKind::Local,
-                    VariableInstruction::Get(_),
-                ) => 0x20,
-                (
-                    ScopeKind::Local,
-                    VariableInstruction::Set { .. },
-                ) => 0x21,
-                (
-                    ScopeKind::Local,
-                    VariableInstruction::Tee(_),
-                ) => 0x22,
+                (ScopeKind::Local, VariableInstruction::Get) => {
+                    0x20
+                }
+                (ScopeKind::Local, VariableInstruction::Set) => {
+                    0x21
+                }
+                (ScopeKind::Local, VariableInstruction::Tee) => {
+                    0x22
+                }
                 (
                     ScopeKind::Global,
-                    VariableInstruction::Get(_),
+                    VariableInstruction::Get,
                 ) => 0x23,
                 (
                     ScopeKind::Global,
-                    VariableInstruction::Set { .. },
+                    VariableInstruction::Set,
                 ) => 0x24,
                 (
                     ScopeKind::Global,
-                    VariableInstruction::Tee(_),
+                    VariableInstruction::Tee,
                 ) => unreachable!("global.tee is not supported"),
             },
             Instruction::Constant { value } => match value {
