@@ -1,23 +1,9 @@
 use std::io::{self, Write};
 
-use super::{emittable::Emittable2, Emittable, Emitter};
+use super::{emittable::Emittable, Emitter};
 use crate::{ast::Constant, opcode::ToOpcode};
 
-impl Emittable for Constant {
-    fn emit_to<W: Write>(
-        &self,
-        writer: &mut W,
-    ) -> io::Result<usize> {
-        let opcode = self.value.to_opcode();
-
-        // Emit the `const` opcode for the given value
-        writer.write_all(&[opcode])?;
-        // .. and then the actual literal
-        self.value.emit_to(writer)
-    }
-}
-
-impl<W: Write> Emittable2<Constant> for Emitter<W> {
+impl<W: Write> Emittable<Constant> for Emitter<W> {
     fn emit_element(
         &mut self,
         // TODO: change to receive &mut Emitter?
@@ -39,7 +25,7 @@ mod tests {
 
     use crate::{
         ast::{Constant, NumericalValue},
-        emitter::{emittable::Emittable2, Emittable, Emitter},
+        emitter::{Emittable, Emitter},
     };
 
     #[test]

@@ -18,7 +18,7 @@ pub struct Emitter<W: Write> {
 
 impl<W: Write> Emitter<W> {
     #[cfg(test)]
-    fn into_inner(self) -> W {
+    pub fn into_inner(self) -> W {
         self.writer
     }
 

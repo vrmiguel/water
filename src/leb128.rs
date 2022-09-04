@@ -6,9 +6,7 @@
 
 use std::{io, io::Write, ops::Not};
 
-use crate::emitter::{
-    emittable::Emittable2, Emittable, Emitter,
-};
+use crate::emitter::{Emittable, Emitter};
 
 const CONTINUATION_BIT: u64 = 1 << 7;
 
@@ -23,7 +21,7 @@ impl From<i64> for SignedLeb128 {
     }
 }
 
-impl<W: Write> Emittable2<SignedLeb128> for Emitter<W> {
+impl<W: Write> Emittable<SignedLeb128> for Emitter<W> {
     fn emit_element(
         &mut self,
         element: SignedLeb128,
@@ -58,40 +56,40 @@ impl<W: Write> Emittable2<SignedLeb128> for Emitter<W> {
     }
 }
 
-impl Emittable for SignedLeb128 {
-    fn emit_to<W: Write>(
-        &self,
-        writer: &mut W,
-    ) -> io::Result<usize> {
-        let mut bytes_written = 0;
-        let mut value = self.value;
-        let mut is_done = false;
+// impl Emittable for SignedLeb128 {
+//     fn emit_to<W: Write>(
+//         &self,
+//         writer: &mut W,
+//     ) -> io::Result<usize> {
+//         let mut bytes_written = 0;
+//         let mut value = self.value;
+//         let mut is_done = false;
 
-        while is_done.not() {
-            // Backup the current value
-            let bkp = value;
+//         while is_done.not() {
+//             // Backup the current value
+//             let bkp = value;
 
-            value >>= 6;
+//             value >>= 6;
 
-            is_done = matches!(value, 0 | -1);
-            let byte = if is_done {
-                bkp & !(CONTINUATION_BIT as i64)
-            } else {
-                // Remove the sign bit
-                value >>= 1;
+//             is_done = matches!(value, 0 | -1);
+//             let byte = if is_done {
+//                 bkp & !(CONTINUATION_BIT as i64)
+//             } else {
+//                 // Remove the sign bit
+//                 value >>= 1;
 
-                // More bytes to come, so set the continuation
-                // bit.
-                bkp | (CONTINUATION_BIT as i64)
-            } as u8;
+//                 // More bytes to come, so set the continuation
+//                 // bit.
+//                 bkp | (CONTINUATION_BIT as i64)
+//             } as u8;
 
-            writer.write_all(&[byte])?;
-            bytes_written += 1;
-        }
+//             writer.write_all(&[byte])?;
+//             bytes_written += 1;
+//         }
 
-        Ok(bytes_written)
-    }
-}
+//         Ok(bytes_written)
+//     }
+// }
 
 /// LEB128 encoder for unsigned integers
 pub struct UnsignedLeb128 {
@@ -104,17 +102,18 @@ impl From<u64> for UnsignedLeb128 {
     }
 }
 
-impl Emittable for UnsignedLeb128 {
-    fn emit_to<W: Write>(
-        &self,
-        writer: &mut W,
+impl<W: Write> Emittable<UnsignedLeb128> for Emitter<W> {
+    fn emit_element(
+        &mut self,
+        element: UnsignedLeb128,
     ) -> io::Result<usize> {
         let mut bytes_written = 0;
-        let mut value = self.value;
+        let UnsignedLeb128 { mut value } = element;
 
         if value == 0 {
-            writer.write_all(&[0])?;
-            return Ok(0);
+            self.emit_byte(0)?;
+
+            return Ok(1);
         }
 
         while value != 0 {
@@ -127,7 +126,7 @@ impl Emittable for UnsignedLeb128 {
             }
 
             bytes_written += 1;
-            writer.write_all(&[byte])?;
+            self.emit_byte(byte)?;
         }
 
         Ok(bytes_written)
@@ -145,7 +144,7 @@ fn low_bits(value: u64) -> u8 {
 #[cfg(test)]
 mod tests {
     use crate::{
-        emitter::Emittable,
+        emitter::{Emittable, Emitter},
         leb128::{SignedLeb128, UnsignedLeb128},
     };
 
@@ -181,16 +180,15 @@ mod tests {
             &[255, 255, 255, 255, 255, 255, 255, 255, 255, 0],
         ];
 
-        let mut bytes = Vec::with_capacity(6);
-
         for (value_to_encode, expected) in
             to_encode.into_iter().zip(expected_encoding)
         {
             let encoder = SignedLeb128::from(value_to_encode);
+            let mut emitter = Emitter::new(Vec::new());
 
-            encoder.emit_to(&mut bytes).unwrap();
-            assert_eq!(bytes, *expected);
-            bytes.clear();
+            emitter.emit_element(encoder).unwrap();
+            // encoder.emit_to(&mut bytes).unwrap();
+            assert_eq!(emitter.into_inner(), *expected);
         }
     }
 
@@ -224,16 +222,15 @@ mod tests {
             &[255, 255, 255, 255, 255, 255, 255, 255, 255, 1],
         ];
 
-        let mut bytes = Vec::with_capacity(10);
-
         for (value_to_encode, expected) in
             to_encode.into_iter().zip(expected_encoding)
         {
             let encoder = UnsignedLeb128::from(value_to_encode);
+            let mut emitter = Emitter::new(Vec::new());
 
-            encoder.emit_to(&mut bytes).unwrap();
-            assert_eq!(bytes, *expected);
-            bytes.clear();
+            emitter.emit_element(encoder).unwrap();
+            // encoder.emit_to(&mut bytes).unwrap();
+            assert_eq!(emitter.into_inner(), *expected);
         }
     }
 }
