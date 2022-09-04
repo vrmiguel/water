@@ -26,6 +26,10 @@ impl<W: Write> Emitter<W> {
     fn emit_version(&mut self) -> io::Result<()> {
         self.emit(VERSION)
     }
+    
+    pub fn new(writer: W) -> Self {
+        Self { writer }
+    }
 
     pub fn emit_program(
         &mut self,

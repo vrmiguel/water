@@ -113,10 +113,7 @@ pub enum Opcode {
     /// E.g. `i32.const 5`, `f64.const 2.5`
     Constant(Constant),
     /// An arithmetic operation
-    Arithmetic {
-        type_: NumericalType,
-        instr: ArithmeticInstruction,
-    },
+    Arithmetic(ArithmeticOperation),
     Comparison {
         type_: NumericalType,
         instr: ComparisonInstruction,
@@ -143,6 +140,15 @@ pub struct Constant {
     /// Represents both the type of the constant
     /// and the constant itself
     pub value: NumericalValue,
+}
+
+/// An arithmetic operation
+#[derive(Clone, Debug, PartialEq)]
+pub struct ArithmeticOperation {
+    /// The related type of this operation (i32, i64, f32 or f64)
+    pub type_: NumericalType,
+    /// The arithmetic instruction of this operation (such as addition, subtraction, etc)
+    pub instr: ArithmeticInstruction,
 }
 
 /// An index for an instruction, may be an identifier or a
