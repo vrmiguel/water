@@ -1,5 +1,11 @@
 use std::io::{self, Write};
 
+mod constant;
+pub mod emittable;
+mod numerical_value;
+
+pub use emittable::Emittable;
+
 const MAGIC: &[u8] = b"\0asm";
 const VERSION: &[u8] = b"1000";
 

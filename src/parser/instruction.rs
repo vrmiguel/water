@@ -18,8 +18,8 @@ use nom::{
 use super::{parse_index, parse_numerical_type, IResult};
 use crate::{
     ast::{
-        Index, Instruction, NumericalType, NumericalValue,
-        Opcode, ScopeKind, VariableInstruction,
+        Constant, Index, Instruction, NumericalType,
+        NumericalValue, Opcode, ScopeKind, VariableInstruction,
     },
     parser::parse_parenthesis_enclosed,
 };
@@ -66,7 +66,9 @@ pub fn parse_instruction(input: &str) -> IResult<Instruction> {
 pub fn parse_opcode(input: &str) -> IResult<Opcode> {
     alt((
         parse_variable_instruction,
-        parse_const.map(|value| Opcode::Constant { value }),
+        parse_const
+            .map(|value| Constant { value })
+            .map(Opcode::Constant),
         parse_unreachable,
         context("call", parse_call).map(Opcode::Call),
     ))(input)

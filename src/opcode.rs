@@ -1,10 +1,21 @@
 use crate::ast::{
-    ArithmeticInstruction, NumericalType, NumericalValue,
-    Opcode, ScopeKind, VariableInstruction,
+    ArithmeticInstruction, Constant, NumericalType,
+    NumericalValue, Opcode, ScopeKind, VariableInstruction,
 };
 
 pub trait ToOpcode {
     fn to_opcode(&self) -> u8;
+}
+
+impl ToOpcode for NumericalValue {
+    fn to_opcode(&self) -> u8 {
+        match self {
+            NumericalValue::Int32(_) => 0x41,
+            NumericalValue::Int64(_) => 0x42,
+            NumericalValue::Float32(_) => 0x43,
+            NumericalValue::Float64(_) => 0x44,
+        }
+    }
 }
 
 impl ToOpcode for Opcode {
@@ -39,12 +50,9 @@ impl ToOpcode for Opcode {
                     VariableInstruction::Tee,
                 ) => unreachable!("global.tee is not supported"),
             },
-            Opcode::Constant { value } => match value {
-                NumericalValue::Int32(_) => 0x41,
-                NumericalValue::Int64(_) => 0x42,
-                NumericalValue::Float32(_) => 0x43,
-                NumericalValue::Float64(_) => 0x44,
-            },
+            Opcode::Constant(Constant { value }) => {
+                value.to_opcode()
+            }
             Opcode::Arithmetic { type_, instr } => {
                 match (type_, instr) {
                     (

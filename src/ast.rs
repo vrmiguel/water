@@ -111,11 +111,7 @@ pub enum Opcode {
     /// Pushes a numerical constant to the stack.
     ///
     /// E.g. `i32.const 5`, `f64.const 2.5`
-    Constant {
-        /// Represents both the type of the constant
-        /// and the constant itself
-        value: NumericalValue,
-    },
+    Constant(Constant),
     /// An arithmetic operation
     Arithmetic {
         type_: NumericalType,
@@ -137,6 +133,16 @@ pub enum Opcode {
     /// (unreachable (i32.const 5) (i32.const 5))
     /// ```
     Unreachable,
+}
+
+/// Pushes a numerical constant to the stack.
+///
+/// E.g. `i32.const 5`, `f64.const 2.5`
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Constant {
+    /// Represents both the type of the constant
+    /// and the constant itself
+    pub value: NumericalValue,
 }
 
 /// An index for an instruction, may be an identifier or a

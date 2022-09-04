@@ -1,5 +1,4 @@
 pub mod ast;
-pub mod emittable;
 pub mod emitter;
 pub mod leb128;
 pub mod opcode;

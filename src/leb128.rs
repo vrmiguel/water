@@ -6,7 +6,7 @@
 
 use std::{io, io::Write, ops::Not};
 
-use crate::emittable::Emittable;
+use crate::emitter::Emittable;
 
 const CONTINUATION_BIT: u64 = 1 << 7;
 
@@ -108,7 +108,7 @@ fn low_bits(value: u64) -> u8 {
 #[cfg(test)]
 mod tests {
     use crate::{
-        emittable::Emittable,
+        emitter::Emittable,
         leb128::{SignedLeb128, UnsignedLeb128},
     };
 
