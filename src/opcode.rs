@@ -1,6 +1,6 @@
 use crate::ast::{
-    ArithmeticInstruction, Opcode, NumericalType,
-    NumericalValue, ScopeKind, VariableInstruction,
+    ArithmeticInstruction, NumericalType, NumericalValue,
+    Opcode, ScopeKind, VariableInstruction,
 };
 
 pub trait ToOpcode {
@@ -10,6 +10,7 @@ pub trait ToOpcode {
 impl ToOpcode for Opcode {
     fn to_opcode(&self) -> u8 {
         match self {
+            Opcode::Unreachable => 0x00,
             Opcode::Call(_) => 0x10,
             Opcode::VariableInstruction {
                 scope,

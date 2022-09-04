@@ -1,3 +1,5 @@
+//! Parsing functions specific to instructions
+
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -6,47 +8,58 @@ use nom::{
     },
     combinator::value,
     error::context,
+    multi::many0,
     number::complete::double as parse_f64,
     sequence::preceded,
-    Parser, multi::many0,
+    Parser,
 };
 
 // use nom::character::complete::double as parse_i64;
 use super::{parse_index, parse_numerical_type, IResult};
-use crate::{ast::{
-    Index, Opcode, NumericalType, NumericalValue,
-    ScopeKind, VariableInstruction, Instruction,
-}, parser::parse_parenthesis_enclosed};
+use crate::{
+    ast::{
+        Index, Instruction, NumericalType, NumericalValue,
+        Opcode, ScopeKind, VariableInstruction,
+    },
+    parser::parse_parenthesis_enclosed,
+};
 
 pub fn parse_instruction(input: &str) -> IResult<Instruction> {
-    fn parse_plain_instruction(input: &str) -> IResult<Instruction> {
+    fn parse_plain_instruction(
+        input: &str,
+    ) -> IResult<Instruction> {
         let (rest, opcode) = parse_opcode(input)?;
 
         let instr = Instruction {
             opcode,
-            arguments: Vec::new()
+            arguments: Vec::new(),
         };
 
         Ok((rest, instr))
     }
 
-    fn parse_instruction_with_arguments(input: &str) -> IResult<Instruction> {
+    fn parse_instruction_with_arguments(
+        input: &str,
+    ) -> IResult<Instruction> {
         let (rest, opcode) = parse_opcode(input)?;
 
-        // TODO: parse_const is incorrect here, change to parse_instruction or something of the sort
-        let (rest, arguments) = many0(preceded(multispace0, parse_parenthesis_enclosed(parse_const)))(rest)?;
+        // TODO: parse_const is incorrect here, change to
+        // parse_instruction or something of the sort
+        let (rest, arguments) = many0(preceded(
+            multispace0,
+            parse_parenthesis_enclosed(parse_const),
+        ))(rest)?;
 
-        let instr = Instruction {
-            opcode,
-            arguments
-        };
+        let instr = Instruction { opcode, arguments };
 
         Ok((rest, instr))
     }
 
     alt((
         parse_plain_instruction,
-        parse_parenthesis_enclosed(parse_instruction_with_arguments)
+        parse_parenthesis_enclosed(
+            parse_instruction_with_arguments,
+        ),
     ))(input)
 }
 
@@ -54,10 +67,10 @@ pub fn parse_opcode(input: &str) -> IResult<Opcode> {
     alt((
         parse_variable_instruction,
         parse_const.map(|value| Opcode::Constant { value }),
+        parse_unreachable,
         context("call", parse_call).map(Opcode::Call),
     ))(input)
 }
-
 
 /// Parses a `const` operation, such as `i32.const 20` or
 /// `f32.const 2.2`
@@ -186,4 +199,11 @@ pub fn parse_variable_instruction(
     };
 
     Ok((rest, instr))
+}
+
+/// Parses the `unreachable` instruction
+pub fn parse_unreachable(input: &str) -> IResult<Opcode> {
+    let (rest, _) = tag("unreachable")(input)?;
+
+    Ok((rest, Opcode::Unreachable))
 }

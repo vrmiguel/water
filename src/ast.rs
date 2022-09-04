@@ -2,8 +2,14 @@
 
 use crate::small_string::SmallString;
 
+pub struct Program {
+    pub modules: Vec<Module>,
+}
+
 /// Represents a WebAssembly Text Format module
-pub struct Module {}
+pub struct Module {
+    // TODO
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Type {
@@ -79,20 +85,22 @@ pub struct Function {
 pub struct Instruction {
     /// The actual operation this instruction represents
     pub opcode: Opcode,
-    /// The list of "inlined" arguments to this instruction, if any.
+    /// The list of "inlined" arguments to this instruction, if
+    /// any.
     // TODO: transform this into a "generic" Value
     // TODO: use SmallVec here
-    pub arguments: Vec<NumericalValue>
+    pub arguments: Vec<NumericalValue>,
 }
 
 /// A single instruction that can be located inside a function
 /// body
 #[derive(Clone, Debug, PartialEq)]
 pub enum Opcode {
+    /// Calls a function
     Call(Index),
     /// Fetch or set a local or global variable
     VariableInstruction {
-        /// Wether this instruction is in `local.` or `global.`
+        /// Whether this instruction is in `local.` or `global.`
         scope: ScopeKind,
         /// Defines if we're getting/setting/teeing the variable
         instruction: VariableInstruction,
@@ -117,6 +125,18 @@ pub enum Opcode {
         type_: NumericalType,
         instr: ComparisonInstruction,
     },
+    /// Denotes a point in code that should not be reachable.
+    /// `unreachable` is an unconditional trap: in the case
+    /// where an unreachable is reached and executed, the
+    /// instruction traps.
+    ///
+    /// Note: unreachable accepts any arity.
+    ///
+    /// ```not-rust
+    /// (i32.const 6)
+    /// (unreachable (i32.const 5) (i32.const 5))
+    /// ```
+    Unreachable,
 }
 
 /// An index for an instruction, may be an identifier or a
@@ -133,7 +153,7 @@ pub enum Index {
     Numerical(i64),
 }
 
-/// Wether a given instruction is in `local.` or `global.`
+/// Whether a given instruction is in `local.` or `global.`
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ScopeKind {
     Global,
@@ -178,7 +198,6 @@ pub enum ArithmeticInstruction {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-
 pub enum ComparisonInstruction {
     Equal,
     NotEqual,
