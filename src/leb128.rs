@@ -6,7 +6,9 @@
 
 use std::{io, io::Write, ops::Not};
 
-use crate::emitter::Emittable;
+use crate::emitter::{
+    emittable::Emittable2, Emittable, Emitter,
+};
 
 const CONTINUATION_BIT: u64 = 1 << 7;
 
@@ -18,6 +20,41 @@ pub struct SignedLeb128 {
 impl From<i64> for SignedLeb128 {
     fn from(value: i64) -> Self {
         Self { value }
+    }
+}
+
+impl<W: Write> Emittable2<SignedLeb128> for Emitter<W> {
+    fn emit_element(
+        &mut self,
+        element: SignedLeb128,
+    ) -> io::Result<usize> {
+        let mut bytes_written = 0;
+        let SignedLeb128 { mut value } = element;
+        let mut is_done = false;
+
+        while is_done.not() {
+            // Backup the current value
+            let bkp = value;
+
+            value >>= 6;
+
+            is_done = matches!(value, 0 | -1);
+            let byte = if is_done {
+                bkp & !(CONTINUATION_BIT as i64)
+            } else {
+                // Remove the sign bit
+                value >>= 1;
+
+                // More bytes to come, so set the continuation
+                // bit.
+                bkp | (CONTINUATION_BIT as i64)
+            } as u8;
+
+            self.emit_byte(byte)?;
+            bytes_written += 1;
+        }
+
+        Ok(bytes_written)
     }
 }
 

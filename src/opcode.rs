@@ -1,6 +1,7 @@
 use crate::ast::{
-    ArithmeticInstruction, Constant, NumericalType,
-    NumericalValue, Opcode, ScopeKind, VariableInstruction, ArithmeticOperation,
+    ArithmeticInstruction, ArithmeticOperation, Constant,
+    NumericalType, NumericalValue, Opcode, ScopeKind,
+    VariableInstruction,
 };
 
 pub trait ToOpcode {
@@ -166,7 +167,9 @@ impl ToOpcode for Opcode {
             Opcode::Constant(Constant { value }) => {
                 value.to_opcode()
             }
-            Opcode::Arithmetic(operation) => operation.to_opcode(),
+            Opcode::Arithmetic(operation) => {
+                operation.to_opcode()
+            }
             Opcode::Comparison { type_, instr } => {
                 let (_, _) = (type_, instr);
                 todo!()

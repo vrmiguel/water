@@ -145,9 +145,11 @@ pub struct Constant {
 /// An arithmetic operation
 #[derive(Clone, Debug, PartialEq)]
 pub struct ArithmeticOperation {
-    /// The related type of this operation (i32, i64, f32 or f64)
+    /// The related type of this operation (i32, i64, f32 or
+    /// f64)
     pub type_: NumericalType,
-    /// The arithmetic instruction of this operation (such as addition, subtraction, etc)
+    /// The arithmetic instruction of this operation (such as
+    /// addition, subtraction, etc)
     pub instr: ArithmeticInstruction,
 }
 

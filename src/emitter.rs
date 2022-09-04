@@ -6,6 +6,8 @@ mod numerical_value;
 
 pub use emittable::Emittable;
 
+use crate::ast::Program;
+
 const MAGIC: &[u8] = b"\0asm";
 const VERSION: &[u8] = b"1000";
 
@@ -15,25 +17,43 @@ pub struct Emitter<W: Write> {
 }
 
 impl<W: Write> Emitter<W> {
-    fn emit(&mut self, bytes: &[u8]) -> io::Result<()> {
+    #[cfg(test)]
+    fn into_inner(self) -> W {
+        self.writer
+    }
+
+    /// Emit a single byte to the writer
+    pub fn emit_byte(&mut self, byte: u8) -> io::Result<()> {
+        self.emit_bytes(&[byte])
+    }
+
+    /// Emit a sequence of bytes to the writer
+    pub fn emit_bytes(
+        &mut self,
+        bytes: &[u8],
+    ) -> io::Result<()> {
         self.writer.write_all(bytes)
     }
 
+    /// Emits the WASM magic constant
     fn emit_magic(&mut self) -> io::Result<()> {
-        self.emit(MAGIC)
+        self.emit_bytes(MAGIC)
     }
 
+    /// Emits the WASM version tag
     fn emit_version(&mut self) -> io::Result<()> {
-        self.emit(VERSION)
+        self.emit_bytes(VERSION)
     }
-    
+
+    /// Builds a new emitter with the given writer
     pub fn new(writer: W) -> Self {
         Self { writer }
     }
 
+    /// Emit the given program to WASM
     pub fn emit_program(
         &mut self,
-        _program: (),
+        _program: Program,
     ) -> io::Result<()> {
         self.emit_magic()?;
         self.emit_version()?;
