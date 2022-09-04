@@ -9,23 +9,16 @@ pub struct Emitter<W: Write> {
 }
 
 impl<W: Write> Emitter<W> {
-    fn emit_asserted(&mut self, bytes: &[u8]) -> io::Result<()> {
-        let bytes_written = self.writer.write(bytes)?;
-        assert_eq!(
-            bytes_written,
-            bytes.len(),
-            "failed to write the entire buffer to the writer"
-        );
-
-        Ok(())
+    fn emit(&mut self, bytes: &[u8]) -> io::Result<()> {
+        self.writer.write_all(bytes)
     }
 
     fn emit_magic(&mut self) -> io::Result<()> {
-        self.emit_asserted(MAGIC)
+        self.emit(MAGIC)
     }
 
     fn emit_version(&mut self) -> io::Result<()> {
-        self.emit_asserted(VERSION)
+        self.emit(VERSION)
     }
 
     pub fn emit_program(
