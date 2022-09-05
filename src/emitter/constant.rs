@@ -6,7 +6,6 @@ use crate::{ast::Constant, opcode::ToOpcode};
 impl<W: Write> Emittable<Constant> for Emitter<W> {
     fn emit_element(
         &mut self,
-        // TODO: change to receive &mut Emitter?
         element: Constant,
     ) -> io::Result<usize> {
         let opcode = element.value.to_opcode();

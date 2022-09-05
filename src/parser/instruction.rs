@@ -44,11 +44,9 @@ pub fn parse_instruction(input: &str) -> IResult<Instruction> {
     ) -> IResult<Instruction> {
         let (rest, opcode) = parse_opcode(input)?;
 
-        // TODO: parse_const is incorrect here, change to
-        // parse_instruction or something of the sort
         let (rest, arguments) = many0(preceded(
             multispace0,
-            parse_parenthesis_enclosed(parse_const),
+            parse_parenthesis_enclosed(parse_instruction),
         ))(rest)?;
 
         let instr = Instruction { opcode, arguments };

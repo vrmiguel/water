@@ -88,8 +88,8 @@ pub struct Instruction {
     /// The list of "inlined" arguments to this instruction, if
     /// any.
     // TODO: transform this into a "generic" Value
-    // TODO: use SmallVec here
-    pub arguments: Vec<NumericalValue>,
+    // TODO: investigate use of SmallVec here
+    pub arguments: Vec<Instruction>,
 }
 
 /// A single instruction that can be located inside a function
@@ -121,7 +121,7 @@ pub enum Opcode {
     Unreachable(Unreachable),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VariableOperation {
     /// Whether this instruction is in `local.` or `global.`
     pub scope: ScopeKind,
@@ -153,7 +153,7 @@ pub struct ArithmeticOperation {
     pub instr: ArithmeticInstruction,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 /// A comparison operation
 pub struct ComparisonOperation {
     /// The related type of this operation (i32, i64, f32 or

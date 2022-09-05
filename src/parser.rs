@@ -145,6 +145,7 @@ pub fn parse_function(input: &str) -> IResult<Function> {
 /// assert_eq!(parse_parameter("(param i32)"), Ok(("", anonymous_i32)));
 /// assert_eq!(parse_parameter("( param $number f64)"), Ok(("", named_f64)));
 /// ```
+// TODO: handle cases such as (param f32 f32)
 pub fn parse_parameter(input: &str) -> IResult<Parameter> {
     fn inner(input: &str) -> IResult<Parameter> {
         let (rest, _) =
@@ -218,7 +219,6 @@ pub fn parse_local(input: &str) -> IResult<Local> {
 /// assert_eq!(parse_identifier("$asd_aa? a"), Ok((" a", SmallString::new("asd_aa?"))));
 /// ```
 pub fn parse_identifier(input: &str) -> IResult<SmallString> {
-    // TODO: can identifiers start with a digit? As in `$1a`
     let (rest, identifier) = context(
         "identifier",
         preceded(
