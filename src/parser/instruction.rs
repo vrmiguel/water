@@ -14,15 +14,17 @@ use nom::{
     Parser,
 };
 
-// use nom::character::complete::double as parse_i64;
-use super::{parse_index, parse_numerical_type, IResult};
+use super::{
+    utils::{parse_index, parse_numerical_type},
+    IResult,
+};
 use crate::{
     ast::{
         Constant, Index, Instruction, NumericalType,
         NumericalValue, Opcode, ScopeKind, Unreachable,
         VariableInstruction, VariableOperation,
     },
-    parser::parse_parenthesis_enclosed,
+    parser::utils::parse_parenthesis_enclosed,
 };
 
 pub fn parse_instruction(input: &str) -> IResult<Instruction> {

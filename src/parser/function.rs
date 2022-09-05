@@ -1,19 +1,15 @@
 use nom::{
-    branch::alt,
-    bytes::complete::{escaped, tag},
-    character::complete::{multispace0, none_of},
-    combinator::opt,
-    error::context,
-    multi::many0,
-    sequence::{delimited, preceded},
+    bytes::complete::tag, character::complete::multispace0,
+    combinator::opt, error::context, multi::many0,
+    sequence::preceded,
 };
 
 use super::IResult;
 use crate::{
-    ast::Function,
-    parser::{
-        parse_identifier, parse_local, parse_parameter,
-        parse_parenthesis_enclosed,
+    ast::{Function, Local, Parameter},
+    parser::utils::{
+        parse_identifier, parse_parenthesis_enclosed,
+        parse_string, parse_type,
     },
     small_string::SmallString,
 };
@@ -110,7 +106,7 @@ pub fn parse_function(input: &str) -> IResult<Function> {
 /// // Wrong: incorrect keyword
 /// assert!(parse_export(r#"(expor "valid""))"#).is_err());
 /// assert!(parse_export(r#"(exporT "valid""))"#).is_err());
-/// 
+///
 /// // Wrong: extra string quote
 /// assert!(parse_export(r#"(export "valid"")"#).is_err());
 /// ```
@@ -128,9 +124,84 @@ pub fn parse_export(input: &str) -> IResult<SmallString> {
     parse_parenthesis_enclosed(context("export", inner))(input)
 }
 
-fn parse_string(input: &str) -> IResult<&str> {
-    let esc = escaped(none_of("\\\""), '\\', tag("\""));
-    let esc_or_empty = alt((esc, tag("")));
+/// Parses a function parameter.
+///
+/// Handles leading whitespace.
+///
+/// ```
+/// use water::ast::{Parameter, Type, NumericalType};
+/// use water::parser::parse_parameter;
+///
+/// let anonymous_i32 = Parameter {
+///     identifier: None,
+///     type_: Type::Numerical(NumericalType::Int32)
+/// };
+///
+/// let named_f64 = Parameter {
+///     identifier: Some("number".into()),
+///     type_: Type::Numerical(NumericalType::Float64)
+/// };
+///
+/// assert_eq!(parse_parameter("(param i32)"), Ok(("", anonymous_i32)));
+/// assert_eq!(parse_parameter("( param $number f64)"), Ok(("", named_f64)));
+/// ```
+// TODO: handle cases such as (param f32 f32)
+pub fn parse_parameter(input: &str) -> IResult<Parameter> {
+    fn inner(input: &str) -> IResult<Parameter> {
+        let (rest, _) =
+            preceded(multispace0, tag("param"))(input)?;
+        let (rest, identifier) =
+            opt(preceded(multispace0, parse_identifier))(rest)?;
+        let (rest, type_) =
+            preceded(multispace0, parse_type)(rest)?;
 
-    delimited(tag("\""), esc_or_empty, tag("\""))(input)
+        let parameter = Parameter { identifier, type_ };
+
+        Ok((rest, parameter))
+    }
+
+    preceded(
+        multispace0,
+        parse_parenthesis_enclosed(context("parameter", inner)),
+    )(input)
+}
+
+/// Parses a local variable definition.
+///
+/// ```
+/// use water::ast::{Local, Type, NumericalType};
+/// use water::parser::parse_local;
+/// use water::small_string::SmallString;
+///
+/// let anonymous_f32 = Local {
+///     identifier: None,
+///     type_: Type::Numerical(NumericalType::Float32)
+/// };
+///
+/// let named_i64 = Local {
+///     identifier: Some("number".into()),
+///     type_: Type::Numerical(NumericalType::Int64)
+/// };
+///
+/// assert_eq!(parse_local("(local f32)"), Ok(("", anonymous_f32)));
+/// assert_eq!(parse_local("( local $number i64)"), Ok(("", named_i64)));
+/// ```
+pub fn parse_local(input: &str) -> IResult<Local> {
+    fn inner(input: &str) -> IResult<Local> {
+        let (rest, _) =
+            preceded(multispace0, tag("local"))(input)?;
+        let (rest, identifier) =
+            opt(preceded(multispace0, parse_identifier))(rest)?;
+        let (rest, type_) =
+            preceded(multispace0, parse_type)(rest)?;
+
+        let local = Local { identifier, type_ };
+
+        Ok((rest, local))
+    }
+
+    preceded(
+        multispace0,
+        parse_parenthesis_enclosed(context("local", inner)),
+    )(input)
 }
