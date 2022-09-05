@@ -1,5 +1,6 @@
 use crate::ast::{
-    ArithmeticInstruction, ArithmeticOperation, Constant,
+    ArithmeticInstruction, ArithmeticOperation,
+    ComparisonInstruction, ComparisonOperation, Constant,
     NumericalType, NumericalValue, Opcode, ScopeKind,
     Unreachable, VariableInstruction,
 };
@@ -138,6 +139,110 @@ impl ToOpcode for ArithmeticOperation {
     }
 }
 
+impl ToOpcode for ComparisonOperation {
+    fn to_opcode(&self) -> u8 {
+        let Self { type_, instr } = self;
+        match (type_, instr) {
+            (
+                NumericalType::Int32,
+                ComparisonInstruction::Equal,
+            ) => 0x45,
+            (
+                NumericalType::Int32,
+                ComparisonInstruction::NotEqual,
+            ) => 0x47,
+            (
+                NumericalType::Int32,
+                ComparisonInstruction::GreaterThan,
+            ) => todo!(),
+            (
+                NumericalType::Int32,
+                ComparisonInstruction::LessThan,
+            ) => todo!(),
+            (
+                NumericalType::Int32,
+                ComparisonInstruction::GreaterOrEqual,
+            ) => todo!(),
+            (
+                NumericalType::Int32,
+                ComparisonInstruction::LessOrEqual,
+            ) => todo!(),
+            (
+                NumericalType::Int64,
+                ComparisonInstruction::Equal,
+            ) => 0x51,
+            (
+                NumericalType::Int64,
+                ComparisonInstruction::NotEqual,
+            ) => 0x52,
+            (
+                NumericalType::Int64,
+                ComparisonInstruction::GreaterThan,
+            ) => todo!(),
+            (
+                NumericalType::Int64,
+                ComparisonInstruction::LessThan,
+            ) => todo!(),
+            (
+                NumericalType::Int64,
+                ComparisonInstruction::GreaterOrEqual,
+            ) => todo!(),
+            (
+                NumericalType::Int64,
+                ComparisonInstruction::LessOrEqual,
+            ) => todo!(),
+            (
+                NumericalType::Float32,
+                ComparisonInstruction::Equal,
+            ) => 0x5b,
+            (
+                NumericalType::Float32,
+                ComparisonInstruction::NotEqual,
+            ) => 0x5c,
+            (
+                NumericalType::Float32,
+                ComparisonInstruction::GreaterThan,
+            ) => todo!(),
+            (
+                NumericalType::Float32,
+                ComparisonInstruction::LessThan,
+            ) => todo!(),
+            (
+                NumericalType::Float32,
+                ComparisonInstruction::GreaterOrEqual,
+            ) => todo!(),
+            (
+                NumericalType::Float32,
+                ComparisonInstruction::LessOrEqual,
+            ) => todo!(),
+            (
+                NumericalType::Float64,
+                ComparisonInstruction::Equal,
+            ) => 0x61,
+            (
+                NumericalType::Float64,
+                ComparisonInstruction::NotEqual,
+            ) => 0x62,
+            (
+                NumericalType::Float64,
+                ComparisonInstruction::GreaterThan,
+            ) => todo!(),
+            (
+                NumericalType::Float64,
+                ComparisonInstruction::LessThan,
+            ) => todo!(),
+            (
+                NumericalType::Float64,
+                ComparisonInstruction::GreaterOrEqual,
+            ) => todo!(),
+            (
+                NumericalType::Float64,
+                ComparisonInstruction::LessOrEqual,
+            ) => todo!(),
+        }
+    }
+}
+
 impl ToOpcode for Opcode {
     fn to_opcode(&self) -> u8 {
         match self {
@@ -175,12 +280,11 @@ impl ToOpcode for Opcode {
             Opcode::Constant(Constant { value }) => {
                 value.to_opcode()
             }
-            Opcode::Arithmetic(operation) => {
-                operation.to_opcode()
+            Opcode::Arithmetic(arithmetic_operation) => {
+                arithmetic_operation.to_opcode()
             }
-            Opcode::Comparison { type_, instr } => {
-                let (_, _) = (type_, instr);
-                todo!()
+            Opcode::Comparison(comparison_operation) => {
+                comparison_operation.to_opcode()
             }
         }
     }

@@ -114,10 +114,7 @@ pub enum Opcode {
     Constant(Constant),
     /// An arithmetic operation
     Arithmetic(ArithmeticOperation),
-    Comparison {
-        type_: NumericalType,
-        instr: ComparisonInstruction,
-    },
+    Comparison(ComparisonOperation),
     /// Denotes a point in code that should not be reachable.
     /// `unreachable` is an unconditional trap: in the case
     /// where an unreachable is reached and executed, the
@@ -151,6 +148,12 @@ pub struct ArithmeticOperation {
     /// The arithmetic instruction of this operation (such as
     /// addition, subtraction, etc)
     pub instr: ArithmeticInstruction,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ComparisonOperation {
+    pub type_: NumericalType,
+    pub instr: ComparisonInstruction,
 }
 
 /// An index for an instruction, may be an identifier or a
