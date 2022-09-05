@@ -85,6 +85,8 @@ pub struct Function {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+/// Represents an instruction along the possible "inlined"
+/// arguments it may have.
 pub struct Instruction {
     /// The actual operation this instruction represents
     pub opcode: Opcode,
@@ -93,6 +95,27 @@ pub struct Instruction {
     // TODO: transform this into a "generic" Value
     // TODO: investigate use of SmallVec here
     pub arguments: Vec<Instruction>,
+}
+
+/// Represents an `import` statement for functions.
+///
+/// Consists of the namespace from which we're importing from,
+/// the name of the imported and the WAT function signature the
+/// imported function will be attached to.
+///
+/// E.g.:
+///
+/// ```not-rust
+///               function name
+///                    ↓↓↓  
+/// (import "console" "log" (func $log (param i32 i32)))
+///          ↑↑↑↑↑↑↑         ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+///         namespace           WAT function signature
+/// ```
+pub struct ImportFunction {
+    pub namespace: SmallString,
+    pub fn_name: SmallString,
+    pub signature: Function,
 }
 
 /// A single instruction that can be located inside a function
