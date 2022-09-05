@@ -87,10 +87,8 @@ pub fn parse_opcode(input: &str) -> IResult<Opcode> {
 /// use water::parser::parse_instruction;
 ///
 /// assert_eq!(parse_const("i64.const -5"), Ok(("", NumericalValue::Int64(-5))));
-/// assert_eq!(parse_instruction("i32.const 5"), Ok(("", Instruction::Constant { value: NumericalValue::Int32(5) })));
 /// assert_eq!(parse_const("f64.const 5.5"), Ok(("", NumericalValue::Float64(5.5))));
 /// assert_eq!(parse_const("f32.const 2E-3"), Ok(("", NumericalValue::Float32(0.002))));
-/// assert_eq!(parse_instruction("f64.const 2e+5"), Ok(("", Instruction::Constant { value: NumericalValue::Float64(200000.0) })));
 /// ```
 pub fn parse_const(input: &str) -> IResult<NumericalValue> {
     // Parse the numerical type of this instruction: i32, i64,
@@ -159,16 +157,16 @@ pub fn parse_call(input: &str) -> IResult<Index> {
 /// Does not eat leading whitespace.
 ///
 /// ```
-/// use water::ast::{ScopeKind, VariableInstruction, Opcode};
+/// use water::ast::{ScopeKind, VariableInstruction, VariableOperation, Opcode, Index};
 /// use water::parser::parse_variable_instruction;
 ///
 /// assert_eq!(
 ///     parse_variable_instruction("local.set $idx"),
-///     Opcode::VariableInstruction {
+///     Ok(("", VariableOperation {
 ///         scope: ScopeKind::Local,
-///         instruction: opcode,
-///         index,
-///     }
+///         instruction: VariableInstruction::Set,
+///         index: Index::Identifier("idx".into()),
+///     }))
 /// );
 /// ```
 pub fn parse_variable_instruction(
