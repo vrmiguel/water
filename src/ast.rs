@@ -112,7 +112,8 @@ pub struct Instruction {
 ///          ↑↑↑↑↑↑↑         ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 ///         namespace           WAT function signature
 /// ```
-pub struct ImportFunction {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FunctionImport {
     pub namespace: SmallString,
     pub fn_name: SmallString,
     pub signature: Function,
