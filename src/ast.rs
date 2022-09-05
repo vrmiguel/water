@@ -71,6 +71,9 @@ pub struct Local {
 pub struct Function {
     /// The identifier for this function, if any.
     pub identifier: Option<SmallString>,
+    /// The identifiers this function will be exported to, if
+    /// any.
+    pub exports: Vec<SmallString>,
     /// The parameters of this function.
     /// Ordered according to the order the
     /// parameters were defined.

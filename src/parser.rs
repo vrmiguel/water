@@ -2,8 +2,10 @@
 //!
 //! Functions are mostly all public as to allow doc-tests.
 
+mod function;
 mod instruction;
 
+pub use function::*;
 pub use instruction::*;
 use nom::{
     branch::alt,
@@ -17,8 +19,7 @@ use nom::{
 
 use crate::{
     ast::{
-        Function, Index, Local, Module, NumericalType,
-        Parameter, Type,
+        Index, Local, Module, NumericalType, Parameter, Type,
     },
     small_string::SmallString,
 };
@@ -56,77 +57,9 @@ pub fn parse_module(input: &str) -> IResult<Module> {
     )(input)
 }
 
-/// Parses a function definition
-///
-/// ```
-/// use water::parser::parse_function;
-/// use water::ast::{Function, Parameter, Local, Type, NumericalType};
-///
-/// let parameters = vec![
-///     Parameter {
-///         identifier: Some("number".into()),
-///         type_: Type::Numerical(NumericalType::Float64)
-///     },
-///     Parameter {
-///         identifier: None,
-///         type_: Type::Numerical(NumericalType::Int64)
-///     },
-/// ];
-///
-/// let local_variables = vec![
-///     Local {
-///         identifier: Some("l1".into()),
-///         type_: Type::Numerical(NumericalType::Int32)
-///     },
-///     Local {
-///         identifier: None,
-///         type_: Type::Numerical(NumericalType::Float32)
-///     },
-/// ];
-///
-/// let function = Function { identifier: Some("add".into()), parameters, local_variables };
-///
-/// assert_eq!(
-///     parse_function("(func $add (param $number f64) (param i64) (local $l1 i32) (local f32))"),
-///     Ok(("", function))
-/// );
-/// ```
-pub fn parse_function(input: &str) -> IResult<Function> {
-    fn inner(input: &str) -> IResult<Function> {
-        let mut parameters = Vec::new();
-        let mut local_variables = Vec::new();
-
-        let (rest, _) =
-            preceded(multispace0, tag("func"))(input)?;
-
-        let (mut rest, identifier) =
-            preceded(multispace0, opt(parse_identifier))(rest)?;
-
-        while let Ok((new_rest, parameter)) =
-            parse_parameter(rest)
-        {
-            rest = new_rest;
-            parameters.push(parameter);
-        }
-
-        while let Ok((new_rest, local)) = parse_local(rest) {
-            rest = new_rest;
-            local_variables.push(local);
-        }
-
-        let function = Function {
-            identifier,
-            parameters,
-            local_variables,
-        };
-
-        Ok((rest, function))
-    }
-
-    parse_parenthesis_enclosed(context("function", inner))(input)
-}
-
 /// Parses a function parameter.
+///
+/// Handles leading whitespace.
 ///
 /// ```
 /// use water::ast::{Parameter, Type, NumericalType};
