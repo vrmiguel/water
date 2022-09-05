@@ -99,15 +99,7 @@ pub enum Opcode {
     /// Calls a function
     Call(Index),
     /// Fetch or set a local or global variable
-    VariableInstruction {
-        /// Whether this instruction is in `local.` or `global.`
-        scope: ScopeKind,
-        /// Defines if we're getting/setting/teeing the variable
-        instruction: VariableInstruction,
-        /// Accesses the variable either through its definition
-        /// index or by its identifier
-        index: Index,
-    },
+    VariableInstruction(VariableOperation),
     /// Pushes a numerical constant to the stack.
     ///
     /// E.g. `i32.const 5`, `f64.const 2.5`
@@ -127,6 +119,17 @@ pub enum Opcode {
     /// (unreachable (i32.const 5) (i32.const 5))
     /// ```
     Unreachable(Unreachable),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct VariableOperation {
+    /// Whether this instruction is in `local.` or `global.`
+    pub scope: ScopeKind,
+    /// Defines if we're getting/setting/teeing the variable
+    pub instruction: VariableInstruction,
+    /// Accesses the variable either through its definition
+    /// index or by its identifier
+    pub index: Index,
 }
 
 /// Pushes a numerical constant to the stack.
@@ -151,8 +154,13 @@ pub struct ArithmeticOperation {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+/// A comparison operation
 pub struct ComparisonOperation {
+    /// The related type of this operation (i32, i64, f32 or
+    /// f64)
     pub type_: NumericalType,
+    /// The arithmetic instruction of this operation (such as
+    /// equal, not equal, greater than, etc)
     pub instr: ComparisonInstruction,
 }
 

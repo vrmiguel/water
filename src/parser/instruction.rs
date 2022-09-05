@@ -20,7 +20,7 @@ use crate::{
     ast::{
         Constant, Index, Instruction, NumericalType,
         NumericalValue, Opcode, ScopeKind, Unreachable,
-        VariableInstruction,
+        VariableInstruction, VariableOperation,
     },
     parser::parse_parenthesis_enclosed,
 };
@@ -66,7 +66,8 @@ pub fn parse_instruction(input: &str) -> IResult<Instruction> {
 
 pub fn parse_opcode(input: &str) -> IResult<Opcode> {
     alt((
-        parse_variable_instruction,
+        parse_variable_instruction
+            .map(Opcode::VariableInstruction),
         parse_const
             .map(|value| Constant { value })
             .map(Opcode::Constant),
@@ -172,7 +173,7 @@ pub fn parse_call(input: &str) -> IResult<Index> {
 /// ```
 pub fn parse_variable_instruction(
     input: &str,
-) -> IResult<Opcode> {
+) -> IResult<VariableOperation> {
     let (rest, scope) = alt((
         value(ScopeKind::Global, tag("global")),
         value(ScopeKind::Local, tag("local")),
@@ -195,13 +196,13 @@ pub fn parse_variable_instruction(
     let (rest, index) =
         preceded(multispace0, parse_index)(rest)?;
 
-    let instr = Opcode::VariableInstruction {
+    let operation = VariableOperation {
         scope,
         instruction: opcode,
         index,
     };
 
-    Ok((rest, instr))
+    Ok((rest, operation))
 }
 
 /// Parses the `unreachable` instruction

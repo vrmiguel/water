@@ -2,7 +2,7 @@ use crate::ast::{
     ArithmeticInstruction, ArithmeticOperation,
     ComparisonInstruction, ComparisonOperation, Constant,
     NumericalType, NumericalValue, Opcode, ScopeKind,
-    Unreachable, VariableInstruction,
+    Unreachable, VariableInstruction, VariableOperation,
 };
 
 pub trait ToOpcode {
@@ -250,41 +250,39 @@ impl ToOpcode for Opcode {
                 unreachable.to_opcode()
             }
             Opcode::Call(_) => 0x10,
-            Opcode::VariableInstruction {
-                scope,
-                instruction,
-                ..
-            } => match (scope, instruction) {
-                (ScopeKind::Local, VariableInstruction::Get) => {
-                    0x20
-                }
-                (ScopeKind::Local, VariableInstruction::Set) => {
-                    0x21
-                }
-                (ScopeKind::Local, VariableInstruction::Tee) => {
-                    0x22
-                }
-                (
-                    ScopeKind::Global,
-                    VariableInstruction::Get,
-                ) => 0x23,
-                (
-                    ScopeKind::Global,
-                    VariableInstruction::Set,
-                ) => 0x24,
-                (
-                    ScopeKind::Global,
-                    VariableInstruction::Tee,
-                ) => unreachable!("global.tee is not supported"),
-            },
+            Opcode::VariableInstruction(variable_operation) => {
+                variable_operation.to_opcode()
+            }
             Opcode::Constant(Constant { value }) => {
                 value.to_opcode()
             }
-            Opcode::Arithmetic(arithmetic_operation) => {
-                arithmetic_operation.to_opcode()
-            }
-            Opcode::Comparison(comparison_operation) => {
-                comparison_operation.to_opcode()
+            Opcode::Arithmetic(op) => op.to_opcode(),
+            Opcode::Comparison(op) => op.to_opcode(),
+        }
+    }
+}
+
+impl ToOpcode for VariableOperation {
+    fn to_opcode(&self) -> u8 {
+        use VariableInstruction as Instr;
+
+        let Self {
+            scope, instruction, ..
+        } = self;
+
+        match (scope, instruction) {
+            // local.get
+            (ScopeKind::Local, Instr::Get) => 0x20,
+            // local.set
+            (ScopeKind::Local, Instr::Set) => 0x21,
+            // local.tee
+            (ScopeKind::Local, Instr::Tee) => 0x22,
+            // global.get
+            (ScopeKind::Global, Instr::Get) => 0x23,
+            // global.set
+            (ScopeKind::Global, Instr::Set) => 0x24,
+            (ScopeKind::Global, Instr::Tee) => {
+                unreachable!("global.tee is not supported")
             }
         }
     }
