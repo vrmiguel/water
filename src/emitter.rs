@@ -1,8 +1,10 @@
 use std::io::{self, Write};
 
+mod arithmetic_operation;
 mod constant;
 pub mod emittable;
 mod numerical_value;
+mod unreachable;
 
 pub use emittable::Emittable;
 
@@ -11,20 +13,15 @@ use crate::ast::Program;
 const MAGIC: &[u8] = b"\0asm";
 const VERSION: &[u8] = b"1000";
 
-pub struct Emitter<W: Write> {
+pub struct Emitter<W> {
     /// Where this Emitter will write to
     writer: W,
 }
 
 impl<W: Write> Emitter<W> {
-    #[cfg(test)]
-    pub fn into_inner(self) -> W {
-        self.writer
-    }
-
     /// Emit a single byte to the writer
-    pub fn emit_byte(&mut self, byte: u8) -> io::Result<()> {
-        self.emit_bytes(&[byte])
+    pub fn emit_byte(&mut self, byte: u8) -> io::Result<usize> {
+        self.emit_bytes(&[byte]).map(|()| 1)
     }
 
     /// Emit a sequence of bytes to the writer
@@ -59,6 +56,22 @@ impl<W: Write> Emitter<W> {
         self.emit_version()?;
 
         Ok(())
+    }
+
+    #[cfg(test)]
+    pub fn into_inner(self) -> W {
+        self.writer
+    }
+}
+
+impl<W> Emitter<std::io::Cursor<W>> {
+    #[cfg(test)]
+    pub fn new_cursored(writer: W) -> Self {
+        use std::io::Cursor;
+
+        Self {
+            writer: Cursor::new(writer),
+        }
     }
 }
 

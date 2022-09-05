@@ -30,8 +30,7 @@ mod tests {
 
     #[test]
     fn emits_i32_const_correctly() {
-        let buf = [0_u8; 3];
-        let mut emitter = Emitter::new(Cursor::new(buf));
+        let mut emitter = Emitter::new_cursored([0_u8; 3]);
 
         let constant = Constant {
             value: NumericalValue::Int32(128),
@@ -52,8 +51,7 @@ mod tests {
 
     #[test]
     fn emits_i64_const_correctly() {
-        let buf = [0_u8; 3];
-        let mut emitter = Emitter::new(Cursor::new(buf));
+        let mut emitter = Emitter::new(Cursor::new([0_u8; 3]));
 
         let constant = Constant {
             value: NumericalValue::Int64(505),
@@ -72,8 +70,7 @@ mod tests {
 
     #[test]
     fn emits_f32_const_correctly() {
-        let buf = [0_u8; 5];
-        let mut emitter = Emitter::new(Cursor::new(buf));
+        let mut emitter = Emitter::new(Cursor::new([0_u8; 5]));
 
         let constant = Constant {
             value: NumericalValue::Float32(5.0),
@@ -93,8 +90,7 @@ mod tests {
 
     #[test]
     fn emits_f64_const_correctly() {
-        let buf = [0_u8; 9];
-        let mut emitter = Emitter::new(Cursor::new(buf));
+        let mut emitter = Emitter::new(Cursor::new([0_u8; 9]));
 
         let constant = Constant {
             value: NumericalValue::Float64(25.50),

@@ -129,7 +129,7 @@ pub enum Opcode {
     /// (i32.const 6)
     /// (unreachable (i32.const 5) (i32.const 5))
     /// ```
-    Unreachable,
+    Unreachable(Unreachable),
 }
 
 /// Pushes a numerical constant to the stack.
@@ -143,7 +143,7 @@ pub struct Constant {
 }
 
 /// An arithmetic operation
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ArithmeticOperation {
     /// The related type of this operation (i32, i64, f32 or
     /// f64)
@@ -220,3 +220,11 @@ pub enum ComparisonInstruction {
     GreaterOrEqual,
     LessOrEqual,
 }
+
+/// Zero-sized type to denote the `unreachable` instruction,
+/// which denotes a point in code that should not be reachable.
+/// `unreachable` is an unconditional trap: in the case
+/// where an unreachable is reached and executed, the
+/// instruction traps.
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub struct Unreachable;

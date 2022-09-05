@@ -19,7 +19,8 @@ use super::{parse_index, parse_numerical_type, IResult};
 use crate::{
     ast::{
         Constant, Index, Instruction, NumericalType,
-        NumericalValue, Opcode, ScopeKind, VariableInstruction,
+        NumericalValue, Opcode, ScopeKind, Unreachable,
+        VariableInstruction,
     },
     parser::parse_parenthesis_enclosed,
 };
@@ -69,7 +70,7 @@ pub fn parse_opcode(input: &str) -> IResult<Opcode> {
         parse_const
             .map(|value| Constant { value })
             .map(Opcode::Constant),
-        parse_unreachable,
+        parse_unreachable.map(Opcode::Unreachable),
         context("call", parse_call).map(Opcode::Call),
     ))(input)
 }
@@ -157,13 +158,13 @@ pub fn parse_call(input: &str) -> IResult<Index> {
 /// Does not eat leading whitespace.
 ///
 /// ```
-/// use water::ast::{ScopeKind, VariableInstruction, Instruction};
+/// use water::ast::{ScopeKind, VariableInstruction, Opcode};
 /// use water::parser::parse_variable_instruction;
 ///
 /// assert_eq!(
-///     parse_variable_instruction("local.set $idx 0"),
-///     Instruction::VariableInstruction {
-///         scope,
+///     parse_variable_instruction("local.set $idx"),
+///     Opcode::VariableInstruction {
+///         scope: ScopeKind::Local,
 ///         instruction: opcode,
 ///         index,
 ///     }
@@ -204,8 +205,8 @@ pub fn parse_variable_instruction(
 }
 
 /// Parses the `unreachable` instruction
-pub fn parse_unreachable(input: &str) -> IResult<Opcode> {
+pub fn parse_unreachable(input: &str) -> IResult<Unreachable> {
     let (rest, _) = tag("unreachable")(input)?;
 
-    Ok((rest, Opcode::Unreachable))
+    Ok((rest, Unreachable))
 }

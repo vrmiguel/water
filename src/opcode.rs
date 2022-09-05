@@ -1,11 +1,17 @@
 use crate::ast::{
     ArithmeticInstruction, ArithmeticOperation, Constant,
     NumericalType, NumericalValue, Opcode, ScopeKind,
-    VariableInstruction,
+    Unreachable, VariableInstruction,
 };
 
 pub trait ToOpcode {
     fn to_opcode(&self) -> u8;
+}
+
+impl ToOpcode for Unreachable {
+    fn to_opcode(&self) -> u8 {
+        0x00
+    }
 }
 
 impl ToOpcode for NumericalValue {
@@ -135,7 +141,9 @@ impl ToOpcode for ArithmeticOperation {
 impl ToOpcode for Opcode {
     fn to_opcode(&self) -> u8 {
         match self {
-            Opcode::Unreachable => 0x00,
+            Opcode::Unreachable(unreachable) => {
+                unreachable.to_opcode()
+            }
             Opcode::Call(_) => 0x10,
             Opcode::VariableInstruction {
                 scope,
