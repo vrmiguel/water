@@ -138,7 +138,7 @@ fn low_bits(value: u64) -> u8 {
     const MASK: u64 = 0xFF;
     let lower_eight_bits = value & MASK;
 
-    (lower_eight_bits & !(CONTINUATION_BIT as u64)) as u8
+    (lower_eight_bits & !CONTINUATION_BIT) as u8
 }
 
 #[cfg(test)]

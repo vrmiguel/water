@@ -32,7 +32,6 @@ pub enum NumericalType {
 /// The same as [`NumericalType`] but actually carries a value
 /// that it represents
 #[derive(Clone, Copy, Debug, PartialEq)]
-
 pub enum NumericalValue {
     /// Signed integer of 32 bits
     Int32(i32),
